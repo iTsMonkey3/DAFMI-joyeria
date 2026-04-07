@@ -64,7 +64,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </Link>
 
           <div className="px-4 py-3 text-gray-400 font-medium text-sm mt-4 border-t border-gray-100 pt-4 cursor-not-allowed">
-            📊 Predicciones (Próximamente)
+            Extras (Por definir)
           </div>
         </nav>
 
