@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Link from 'next/link';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,12 +23,28 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="es">
+      {/* Mantenemos tu configuración original de fuentes en el body */}
+      <body className="antialiased bg-white text-gray-900">
+        
+        {/* Tu nuevo Navbar Global */}
+        <nav className="bg-white border-b border-gray-100 py-4 px-8 sticky top-0 z-50">
+          <div className="max-w-6xl mx-auto flex justify-between items-center">
+            <Link href="/" className="text-2xl font-extrabold tracking-widest text-black uppercase">
+              Joyería
+            </Link>
+            <div className="space-x-6">
+              <Link href="/" className="text-gray-600 hover:text-black font-medium transition-colors">Inicio</Link>
+              <Link href="/catalogo" className="text-gray-600 hover:text-black font-medium transition-colors">Catálogo</Link>
+            </div>
+          </div>
+        </nav>
+
+        {children}
+        
+      </body>
     </html>
   );
 }
