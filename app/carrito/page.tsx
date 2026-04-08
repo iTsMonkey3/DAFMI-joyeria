@@ -3,7 +3,7 @@
 
 import { useCartStore } from '../../components/store/cartStore';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react'; //a
 
 export default function CarritoPage() {
   const { items, eliminarDelCarrito, limpiarCarrito } = useCartStore();
