@@ -10,10 +10,14 @@ export default function Catalogo() {
   const [cargando, setCargando] = useState(true);
   const valorMaximo = 100000
   
-  // 1. Nuevos Estados para los Filtros
+  // Estados para los Filtros
   const [categoriaActiva, setCategoriaActiva] = useState('Todas');
   const [busqueda, setBusqueda] = useState('');
-  const [precioMaximo, setPrecioMaximo] = useState(valorMaximo); // Tope inicial alto
+  const [precioMaximo, setPrecioMaximo] = useState(valorMaximo);
+
+  // NUEVO 1: Estados para la Paginación
+  const [paginaActual, setPaginaActual] = useState(1);
+  const productosPorPagina = 20; // Aquí decides cuántos mostrar
 
   const categorias = ['Todas', 'Anillos', 'Collares', 'Pulseras'];
 
@@ -27,26 +31,30 @@ export default function Catalogo() {
       }
       setCargando(false);
     }
-
     obtenerJoyas();
   }, []);
 
-  // 2. LÓGICA DE FILTRADO MAESTRA
+  // NUEVO 2: Si el usuario cambia CUALQUIER filtro, lo regresamos a la página 1
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [categoriaActiva, busqueda, precioMaximo]);
+
+  // Lógica de Filtrado (Se queda igualita)
   const joyasFiltradas = productos.filter((joya) => {
-    // A) ¿Coincide la categoría?
     const coincideCategoria = categoriaActiva === 'Todas' || joya.category === categoriaActiva;
-    
-    // B) ¿Coincide el texto de búsqueda? (Buscamos en nombre o descripción, todo en minúsculas)
     const textoBusqueda = busqueda.toLowerCase();
     const coincideTexto = joya.name.toLowerCase().includes(textoBusqueda) || 
                           joya.description.toLowerCase().includes(textoBusqueda);
-    
-    // C) ¿El precio es menor o igual al límite del usuario?
     const coincidePrecio = joya.price <= precioMaximo;
-
-    // Solo mostramos la joya si cumple con las TRES condiciones a la vez
     return coincideCategoria && coincideTexto && coincidePrecio;
   });
+
+  // NUEVO 3: Lógica de Paginación (Cortamos el arreglo filtrado)
+  const indiceUltimoItem = paginaActual * productosPorPagina;
+  const indicePrimerItem = indiceUltimoItem - productosPorPagina;
+  const joyasPaginadas = joyasFiltradas.slice(indicePrimerItem, indiceUltimoItem);
+  
+  const totalPaginas = Math.ceil(joyasFiltradas.length / productosPorPagina);
 
   return (
     <main className="min-h-screen bg-gray-50 p-8">
@@ -61,16 +69,13 @@ export default function Catalogo() {
           </p>
         </header>
 
-        {/* 3. BARRA DE HERRAMIENTAS (Filtros y Búsqueda) */}
+        {/* Barra de Herramientas (Filtros) */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-10">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
             
-            {/* Buscador de texto */}
             <div className="col-span-1 md:col-span-2">
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-                  🔍
-                </span>
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">🔍</span>
                 <input
                   type="text"
                   placeholder="Buscar por nombre, material o detalle..."
@@ -81,32 +86,24 @@ export default function Catalogo() {
               </div>
             </div>
 
-            {/* Deslizador de precio */}
             <div className="col-span-1">
               <label className="block text-sm font-semibold text-gray-700 mb-2 flex justify-between items-center">
                 <span>Precio máximo:</span>
-                
-                {/* Nuevo Input Numérico */}
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-2 flex items-center text-gray-500 font-bold text-sm">
-                    $
-                  </span>
+                  <span className="absolute inset-y-0 left-0 pl-2 flex items-center text-gray-500 font-bold text-sm">$</span>
                   <input
                     type="number"
                     min="0"
-                    // max="20000" // Opcional: puedes ponerle un límite también a lo que escriben
-                    max = {precioMaximo}
                     value={precioMaximo}
                     onChange={(e) => setPrecioMaximo(Number(e.target.value))}
                     className="w-28 pl-6 pr-2 py-1 text-right font-bold text-black border border-gray-300 rounded-md focus:ring-2 focus:ring-black outline-none transition-all"
                   />
                 </div>
               </label>
-              
               <input
                 type="range"
                 min="0"
-                max="20000" // Tope de tu barra
+                max={valorMaximo}
                 step="500"
                 value={precioMaximo}
                 onChange={(e) => setPrecioMaximo(Number(e.target.value))}
@@ -115,7 +112,6 @@ export default function Catalogo() {
             </div>
           </div>
 
-          {/* Botones de Categorías */}
           <div className="flex flex-wrap gap-3 mt-6 pt-6 border-t border-gray-100">
             {categorias.map((categoria) => (
               <button
@@ -133,7 +129,7 @@ export default function Catalogo() {
           </div>
         </div>
 
-        {/* 4. RESULTADOS */}
+        {/* Resultados */}
         {cargando ? (
           <div className="text-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
@@ -141,22 +137,48 @@ export default function Catalogo() {
           </div>
         ) : (
           <>
-            {/* Mensaje de conteo de resultados */}
-            <div className="mb-6 text-gray-500 font-medium">
-              Mostrando {joyasFiltradas.length} {joyasFiltradas.length === 1 ? 'pieza' : 'piezas'}
+            <div className="mb-6 text-gray-500 font-medium flex justify-between items-center">
+              <span>
+                Mostrando {indicePrimerItem + 1} - {Math.min(indiceUltimoItem, joyasFiltradas.length)} de {joyasFiltradas.length} piezas
+              </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {joyasFiltradas.map((product) => (
+              {/* NUEVO 4: Iteramos sobre joyasPaginadas, no sobre todas */}
+              {joyasPaginadas.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
+
+            {/* NUEVO 5: Controles de Paginación UI */}
+            {totalPaginas > 1 && (
+              <div className="mt-16 flex justify-center items-center gap-4">
+                <button
+                  onClick={() => setPaginaActual(prev => Math.max(prev - 1, 1))}
+                  disabled={paginaActual === 1}
+                  className="px-4 py-2 rounded-lg font-semibold text-sm transition-colors border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+                >
+                  &larr; Anterior
+                </button>
+                
+                <span className="text-gray-600 font-medium">
+                  Página {paginaActual} de {totalPaginas}
+                </span>
+
+                <button
+                  onClick={() => setPaginaActual(prev => Math.min(prev + 1, totalPaginas))}
+                  disabled={paginaActual === totalPaginas}
+                  className="px-4 py-2 rounded-lg font-semibold text-sm transition-colors border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+                >
+                  Siguiente &rarr;
+                </button>
+              </div>
+            )}
 
             {!cargando && joyasFiltradas.length === 0 && (
               <div className="text-center py-20 bg-white rounded-2xl border border-gray-100">
                 <p className="text-2xl mb-2">🥲</p>
                 <p className="text-xl text-gray-900 font-bold">No encontramos ninguna joya con esos filtros.</p>
-                <p className="text-gray-500 mt-2">Intenta subir el precio o cambiar la búsqueda.</p>
                 <button 
                   onClick={() => {
                     setBusqueda('');
