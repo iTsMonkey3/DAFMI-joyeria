@@ -4,6 +4,7 @@
 import { useCartStore } from '../../components/store/cartStore';
 import Link from 'next/link';
 import { useEffect, useState } from 'react'; //a
+import { supabase } from '../../lib/supabase';
 
 export default function CarritoPage() {
   const { items, eliminarDelCarrito, limpiarCarrito } = useCartStore();
@@ -18,30 +19,62 @@ export default function CarritoPage() {
 
   const total = items.reduce((sum, item) => sum + (item.price * item.cantidad), 0);
 
-  // Lógica para enviar a WhatsApp
-  const enviarPedidoPorWhatsApp = () => {
-    const numeroEmpresa = "523320704632"; // El número de tu tío
-    
-    // Tu dominio base (Asegúrate de cambiarlo si después compras un dominio propio)
+// Lógica para enviar a WhatsApp Y registrar el Lead
+  const enviarPedidoPorWhatsApp = async () => {
+    const numeroEmpresa = "523320704632"; 
     const dominioBase = "https://catalogo-nexrt-pruebas.vercel.app";
     
-    // Armamos el texto línea por línea
+    // 1. Armamos el texto para el mensaje de WhatsApp
     let mensaje = `¡Hola! Me gustaría cotizar y confirmar disponibilidad de las siguientes piezas:\n\n`;
+    let resumenParaBaseDeDatos = ""; // Texto más limpio solo para tu tío
     
     items.forEach((item) => {
-      // 1. Agregamos el nombre y precio
       mensaje += `*${item.cantidad}x ${item.name}* - $${item.price.toLocaleString('en-US')} MXN c/u\n`;
-      // 2. Agregamos el link directo a la pieza
       mensaje += `🔗 Ver pieza: ${dominioBase}/producto/${item.id}\n\n`; 
+      
+      // Armamos un resumen rápido para la BD (ej. "2x Anillo Oro, 1x Cadena Plata")
+      resumenParaBaseDeDatos += `${item.cantidad}x ${item.name}, `;
     });
 
     mensaje += `*Total estimado: $${total.toLocaleString('en-US')} MXN*`;
     mensaje += `\n\n¿Tienen estas piezas en existencia?`;
 
-    const linkWhatsApp = `https://wa.me/${numeroEmpresa}?text=${encodeURIComponent(mensaje)}`;
+    // 2. EL ESPÍA: Guardamos silenciosamente en Supabase (Fire and forget)
+    // No usamos "await" para no trabar el botón del usuario, lo lanzamos en segundo plano.
+    const totalPiezas = items.reduce((sum, item) => sum + item.cantidad, 0);
     
-    // Abrimos WhatsApp en una nueva pestaña
+// Dentro de enviarPedidoPorWhatsApp...
+
+    // 1. Primero insertamos el Lead principal
+    const { data: nuevoLead, error: errorLead } = await supabase
+      .from('leads')
+      .insert([{ 
+          resumen_pedido: resumenParaBaseDeDatos, 
+          total_estimado: total, 
+          cantidad_piezas: totalPiezas 
+      }])
+      .select() // Esto nos devuelve el ID generado
+      .single();
+
+    if (nuevoLead) {
+      // 2. Insertamos todos los productos en la tabla relacional
+      const itemsParaGuardar = items.map(item => ({
+        lead_id: nuevoLead.id,
+        product_id: item.id,
+        cantidad: item.cantidad
+      }));
+
+      await supabase.from('lead_items').insert(itemsParaGuardar);
+    }
+
+    
+
+    // 3. Ejecutamos la acción principal: Abrir WhatsApp
+    const linkWhatsApp = `https://wa.me/${numeroEmpresa}?text=${encodeURIComponent(mensaje)}`;
     window.open(linkWhatsApp, '_blank');
+    
+    // 4. (Opcional) Limpiar el carrito después de enviar la cotización
+    // limpiarCarrito(); 
   };
 
   return (

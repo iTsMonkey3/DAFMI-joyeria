@@ -63,9 +63,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             Agregar Joya
           </Link>
 
-          <div className="px-4 py-3 text-gray-400 font-medium text-sm mt-4 border-t border-gray-100 pt-4 cursor-not-allowed">
-            Extras (Por definir)
-          </div>
+          <Link href="/admin/dashboard/estadisticas" className={`block px-4 py-3 rounded-lg font-medium transition-colors ${pathname === '/admin/dashboard/estadisticas' ? 'bg-black text-white shadow-md' : 'text-gray-600 hover:bg-gray-100 hover:text-black'}`}>
+            📊 Cotizaciones (Leads)
+          </Link>
         </nav>
 
         <div className="p-4 border-t border-gray-200">
