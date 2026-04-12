@@ -1,5 +1,6 @@
 // app/page.tsx
 import Link from 'next/link';
+import TopProducts from '@/components/TopProducts'; // Ajusta la ruta si es necesario
 
 export default function Home() {
   return (
@@ -7,7 +8,6 @@ export default function Home() {
       
       {/* SECCIÓN HERO: Elegancia y Enfoque Visual */}
       <section className="relative h-[85vh] flex items-center justify-center overflow-hidden">
-        {/* Imagen de fondo con overlay gradiente para que el texto resalte */}
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-[#0a0a0a] z-10"></div>
           {/* Aquí puedes poner tu imagen de joyería fina */}
@@ -38,37 +38,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* SECCIÓN: Lo más destacado (Placeholder del Carrusel) */}
-      <section className="py-24 px-8 max-w-7xl mx-auto">
-        <div className="flex justify-between items-end mb-16">
-          <div>
-            <h2 className="text-3xl font-bold tracking-widest uppercase mb-2">Lo más destacado</h2>
-            <div className="h-1 w-20 bg-white"></div>
-          </div>
-          <Link href="/catalogo" className="text-sm text-gray-500 hover:text-white transition-colors border-b border-gray-800 pb-1">
-            Ver todo
-          </Link>
-        </div>
-
-        {/* Grid de productos destacados */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-          {[1, 2, 3].map((item) => (
-            <div key={item} className="group cursor-pointer">
-              <div className="relative aspect-[4/5] bg-[#1a1a1a] mb-6 overflow-hidden">
-                {/* Imagen del producto */}
-                <div className="absolute inset-0 bg-gray-800 group-hover:scale-110 transition-transform duration-700"></div>
-                <div className="absolute bottom-4 left-4">
-                   <button className="bg-white text-black text-[10px] font-bold py-2 px-4 uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                     Vista Rápida
-                   </button>
-                </div>
-              </div>
-              <h4 className="text-sm font-medium tracking-widest uppercase mb-1 text-gray-300">Pieza de Colección</h4>
-              <p className="text-xs text-gray-500 uppercase tracking-widest">Desde $1,200 MXN</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      {/* COMPONENTE DINÁMICO: Lo más buscado */}
+      <TopProducts />
 
       {/* SECCIÓN: Valores / Diferenciales */}
       <section className="py-32 px-8 bg-[#111111] border-y border-[#1a1a1a]">

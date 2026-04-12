@@ -19,62 +19,52 @@ export default function CarritoPage() {
 
   const total = items.reduce((sum, item) => sum + (item.price * item.cantidad), 0);
 
-// Lógica para enviar a WhatsApp Y registrar el Lead
   const enviarPedidoPorWhatsApp = async () => {
     const numeroEmpresa = "523320704632"; 
     const dominioBase = "https://catalogo-nexrt-pruebas.vercel.app";
     
-    // 1. Armamos el texto para el mensaje de WhatsApp
-    let mensaje = `¡Hola! Me gustaría cotizar y confirmar disponibilidad de las siguientes piezas:\n\n`;
-    let resumenParaBaseDeDatos = ""; // Texto más limpio solo para tu tío
+    // 1. Preparamos el mensaje de WhatsApp (como ya lo tenías)
+    let mensaje = `¡Hola! Me gustaría cotizar estas piezas:\n\n`;
+    let resumenParaBaseDeDatos = "";
     
     items.forEach((item) => {
-      mensaje += `*${item.cantidad}x ${item.name}* - $${item.price.toLocaleString('en-US')} MXN c/u\n`;
-      mensaje += `🔗 Ver pieza: ${dominioBase}/producto/${item.id}\n\n`; 
-      
-      // Armamos un resumen rápido para la BD (ej. "2x Anillo Oro, 1x Cadena Plata")
+      mensaje += `*${item.cantidad}x ${item.name}* - $${item.price.toLocaleString('en-US')} MXN\n`;
+      mensaje += `🔗 Ver: ${dominioBase}/producto/${item.id}\n\n`; 
       resumenParaBaseDeDatos += `${item.cantidad}x ${item.name}, `;
     });
 
     mensaje += `*Total estimado: $${total.toLocaleString('en-US')} MXN*`;
-    mensaje += `\n\n¿Tienen estas piezas en existencia?`;
 
-    // 2. EL ESPÍA: Guardamos silenciosamente en Supabase (Fire and forget)
-    // No usamos "await" para no trabar el botón del usuario, lo lanzamos en segundo plano.
+    // 2. GUARDADO RELACIONAL: Primero el Lead para obtener su ID
     const totalPiezas = items.reduce((sum, item) => sum + item.cantidad, 0);
     
-// Dentro de enviarPedidoPorWhatsApp...
-
-    // 1. Primero insertamos el Lead principal
     const { data: nuevoLead, error: errorLead } = await supabase
       .from('leads')
-      .insert([{ 
-          resumen_pedido: resumenParaBaseDeDatos, 
-          total_estimado: total, 
-          cantidad_piezas: totalPiezas 
+      .insert([{
+        resumen_pedido: resumenParaBaseDeDatos,
+        total_estimado: total,
+        cantidad_piezas: totalPiezas
       }])
-      .select() // Esto nos devuelve el ID generado
+      .select() // Importante: esto nos devuelve el ID que acaba de crear
       .single();
 
     if (nuevoLead) {
-      // 2. Insertamos todos los productos en la tabla relacional
-      const itemsParaGuardar = items.map(item => ({
+      // 3. Ahora guardamos cada item vinculado a ese Lead
+      const itemsRelacionales = items.map(item => ({
         lead_id: nuevoLead.id,
         product_id: item.id,
         cantidad: item.cantidad
       }));
 
-      await supabase.from('lead_items').insert(itemsParaGuardar);
+      const { error: errorItems } = await supabase
+        .from('lead_items')
+        .insert(itemsRelacionales);
+        
+      if (errorItems) console.error("Error guardando items:", errorItems);
     }
 
-    
-
-    // 3. Ejecutamos la acción principal: Abrir WhatsApp
-    const linkWhatsApp = `https://wa.me/${numeroEmpresa}?text=${encodeURIComponent(mensaje)}`;
-    window.open(linkWhatsApp, '_blank');
-    
-    // 4. (Opcional) Limpiar el carrito después de enviar la cotización
-    // limpiarCarrito(); 
+    // 4. Abrimos WhatsApp
+    window.open(`https://wa.me/${numeroEmpresa}?text=${encodeURIComponent(mensaje)}`, '_blank');
   };
 
   return (
