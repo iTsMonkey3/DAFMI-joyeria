@@ -1,5 +1,6 @@
 // app/page.tsx
 import Link from 'next/link';
+import TopProducts from '../components/TopProducts';
 
 export default function Home() {
   return (
@@ -27,6 +28,8 @@ export default function Home() {
           </Link>
         </div>
       </section>
+
+      <TopProducts />
 
       {/* Sección de Datos Curiosos / Historia */}
       <section className="py-24 px-4 bg-gray-50">
