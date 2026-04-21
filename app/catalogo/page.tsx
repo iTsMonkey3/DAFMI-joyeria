@@ -1,8 +1,8 @@
-// app/catalogo/page.tsx (o donde tengas tu componente Catalogo)
+// app/catalogo/page.tsx
 "use client";
 
 import { useState, useEffect } from 'react';
-import ProductCard from '../../components/ProductCard'; // Ajusta la ruta si es necesario
+import ProductCard from '../../components/ProductCard'; 
 import { supabase } from '../../lib/supabase';
 import { Product } from '../../lib/types';
 
@@ -18,7 +18,7 @@ export default function Catalogo() {
 
   // Estados para la Paginación
   const [paginaActual, setPaginaActual] = useState(1);
-  const productosPorPagina = 12; // 12 es múltiplo de 1, 2, 3 y 4, ideal para grids responsivos
+  const productosPorPagina = 12;
 
   const categorias = ['Todas', 'Anillos', 'Collares', 'Pulseras'];
 
@@ -58,8 +58,22 @@ export default function Catalogo() {
   const totalPaginas = Math.ceil(joyasFiltradas.length / productosPorPagina);
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] text-white py-16 px-4 md:px-8">
-      <div className="max-w-7xl mx-auto">
+    // Agregamos 'relative' aquí para contener el contexto de z-index
+    <main className="min-h-screen bg-[#0a0a0a] text-white py-16 px-4 md:px-8 relative">
+      
+      {/* --- LOGO DE FONDO (MARCA DE AGUA) --- */}
+      {/* fixed: se queda centrado en la pantalla. pointer-events-none: no bloquea clics. opacity-[0.03]: opacidad del 3% */}
+      <div className="fixed inset-0 z-0 flex items-center justify-center pointer-events-none select-none opacity-[0.03] md:opacity-[0.05]">
+        <img 
+          src="/LogoSinFondo.png" 
+          alt="DAFMI Watermark" 
+          className="w-[90vw] md:w-[60vw] max-w-5xl object-contain grayscale"
+        />
+      </div>
+
+      {/* --- CONTENEDOR PRINCIPAL --- */}
+      {/* relative z-10: asegura que todo el contenido esté por encima de la marca de agua */}
+      <div className="max-w-7xl mx-auto relative z-10">
         
         {/* ENCABEZADO */}
         <header className="mb-16 text-center">
@@ -72,8 +86,8 @@ export default function Catalogo() {
           </p>
         </header>
 
-        {/* BARRA DE FILTROS (Alto contraste y líneas limpias) */}
-        <div className="bg-[#111111] p-6 md:p-8 border border-[#1a1a1a] mb-12">
+        {/* BARRA DE FILTROS */}
+        <div className="bg-[#111111]/80 backdrop-blur-sm p-6 md:p-8 border border-[#1a1a1a] mb-12">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-end">
             
             <div className="col-span-1 md:col-span-2 group">
@@ -86,11 +100,8 @@ export default function Catalogo() {
                   placeholder="Ej. Anillo solitario, oro blanco..."
                   value={busqueda}
                   onChange={(e) => setBusqueda(e.target.value)}
-                  // Quitamos los bordes completos y dejamos solo una fina línea inferior (border-b)
-                  // Aumentamos el tamaño de letra (text-lg) para que el texto se vea con más confianza
                   className="w-full bg-transparent border-b border-[#333] text-lg text-white placeholder-[#444] py-3 pr-10 focus:border-white focus:outline-none transition-all duration-500 font-light"
                 />
-                {/* Movimos el ícono a la derecha y le dimos un efecto que se ilumina cuando escribes */}
                 <span className="absolute inset-y-0 right-0 flex items-center text-[#444] group-focus-within:text-white transition-colors duration-500">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="w-5 h-5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
@@ -115,7 +126,7 @@ export default function Catalogo() {
                   step="500"
                   value={precioMaximo}
                   onChange={(e) => setPrecioMaximo(Number(e.target.value))}
-                  className="w-full h-1 bg-[#2a2a2a] appearance-none cursor-pointer accent-white"
+                  className="w-full h-1 bg-[#2a2a2a] appearance-none cursor-pointer accent-white relative z-20"
                 />
               </div>
             </div>
@@ -127,7 +138,7 @@ export default function Catalogo() {
               <button
                 key={categoria}
                 onClick={() => setCategoriaActiva(categoria)}
-                className={`px-8 py-3 text-[10px] uppercase tracking-[0.2em] font-medium transition-all duration-300 ${
+                className={`px-8 py-3 text-[10px] uppercase tracking-[0.2em] font-medium transition-all duration-300 relative z-20 ${
                   categoriaActiva === categoria
                     ? 'bg-white text-black border border-white'
                     : 'bg-transparent text-gray-400 border border-[#333] hover:border-white hover:text-white'
@@ -141,7 +152,6 @@ export default function Catalogo() {
 
         {/* RESULTADOS */}
         {cargando ? (
-          // Loader minimalista
           <div className="text-center py-32 flex flex-col items-center justify-center">
             <div className="w-8 h-8 border-t-2 border-white border-solid rounded-full animate-spin mb-6"></div>
             <p className="text-sm text-gray-500 uppercase tracking-[0.2em]">Preparando catálogo</p>
@@ -160,9 +170,9 @@ export default function Catalogo() {
               ))}
             </div>
 
-            {/* ESTADO VACÍO (Si no hay coincidencias) */}
+            {/* ESTADO VACÍO */}
             {!cargando && joyasFiltradas.length === 0 && (
-              <div className="text-center py-32 border border-[#1a1a1a] bg-[#111111]">
+              <div className="text-center py-32 border border-[#1a1a1a] bg-[#111111]/80 backdrop-blur-sm relative z-20">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="w-12 h-12 mx-auto text-gray-600 mb-6">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z" />
                 </svg>
@@ -183,7 +193,7 @@ export default function Catalogo() {
 
             {/* CONTROLES DE PAGINACIÓN */}
             {totalPaginas > 1 && (
-              <div className="mt-20 flex justify-center items-center gap-6">
+              <div className="mt-20 flex justify-center items-center gap-6 relative z-20">
                 <button
                   onClick={() => setPaginaActual(prev => Math.max(prev - 1, 1))}
                   disabled={paginaActual === 1}
